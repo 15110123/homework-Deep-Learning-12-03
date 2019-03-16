@@ -6,7 +6,7 @@ import argparse
 import random
 
 ####
-# disable logs
+# Tắt log
 tf.logging.set_verbosity(tf.logging.ERROR)
 #
 # checkpoint
@@ -65,18 +65,19 @@ if __name__ == '__main__':
     # Embedding là thủ thuật ánh xạ một hàng của ma trận số nguyên với một đối
     # tượng nào đó (một từ hay chữ chẳng hạn).
     embs = tf.get_variable('emb', [num_classes, state_size])
-    # Ánh xạ mỗi phần tử trong xs_ với emb. 
+    # Ánh xạ mỗi phần tử trong xs_ với emb.
     rnn_inputs = tf.nn.embedding_lookup(embs, xs_)
-    # Khởi tạo hidden state. 
+    # Khởi tạo hidden state.
     init_state = tf.placeholder(shape=[None, state_size], dtype=tf.float32, name='initial_state')
     
-    # Scan là hàm cho phép khai báo vòng lặp trong graph. Step ứng với t trong mô hình RNN. 
+    # Scan là hàm cho phép khai báo vòng lặp trong graph.  Step ứng với t trong
+    # mô hình RNN.
     states = tf.scan(step, 
             tf.transpose(rnn_inputs, [1,0,2]),
             initializer=init_state) 
 
     last_state = states[-1]
-    # Chuyển vị ma trận. 
+    # Chuyển vị ma trận.
     states = tf.transpose(states, [1,0,2])
 
     # Dự đoán
@@ -99,13 +100,13 @@ if __name__ == '__main__':
     if args['train']:
         #
         # training
-        #  Cấu hình epoch 
+        #  Cấu hình epoch
         epochs = 50
         #
         # Kích thước batch
         batch_size = BATCH_SIZE
         train_set = utils.rand_batch_gen(X,Y,batch_size=batch_size)
-        # Bắt đầu phiên huấn luyện 
+        # Bắt đầu phiên huấn luyện
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             train_loss = 0
@@ -121,6 +122,7 @@ if __name__ == '__main__':
                         train_loss += train_loss_
                     print('[{}] loss : {}'.format(i,train_loss / 1000))
                     train_loss = 0
+# Ctrl + C để dừng train
             except KeyboardInterrupt:
                 print('interrupted by user at ' + str(i))
                 #
@@ -129,49 +131,50 @@ if __name__ == '__main__':
                 saver = tf.train.Saver()
                 saver.save(sess, ckpt_path + 'vanilla1.ckpt', global_step=i)
     elif args['generate']:
-        #
-        # generate text
+
+        # Chọn chữ ngẫu nhiên để bắt đầu. 
         random_init_word = random.choice(idx2ch)
         current_word = ch2idx[random_init_word]
-        #
-        # start session
+        
+        # Bắt đầu session 
         with tf.Session() as sess:
-            # init session
+            # Khởi tạo 
             sess.run(tf.global_variables_initializer())
             #
-            # restore session
+            # Khôi phục lại session đã lưu trước đó. 
             ckpt = tf.train.get_checkpoint_state(ckpt_path)
             saver = tf.train.Saver()
             if ckpt and ckpt.model_checkpoint_path:
                 saver.restore(sess, ckpt.model_checkpoint_path)
-            # generate operation
+
             words = [current_word]
             state = None
-            # set batch_size to 1
+            # Đặt batch size là 1
             batch_size = 1
+            # Nếu không có argument num_words, chọn 111 làm mặc định. 
             num_words = args['num_words'] if args['num_words'] else 111
-            # enter the loop
+            # Bắt đầu vòng lặp. Mỗi vòng lặp sinh ra 1 từ. 
             for i in range(num_words):
+            # state là flag xác định state_ đã được gán hay chưa. Nếu state có rồi thì state sẽ đóng vai trò tham chiếu ẩn trong hồi quy. 
                 if state:
                     feed_dict = { xs_ : np.array(current_word).reshape([1, 1]), 
                             init_state : state_ }
                 else:
                     feed_dict = { xs_ : np.array(current_word).reshape([1,1])
                             , init_state : np.zeros([batch_size, state_size]) }
-                #
+                
                 # forward propagation
                 preds, state_ = sess.run([predictions, last_state], feed_dict=feed_dict)
-                #
-                # set flag to true
+                
+                # Chuyễn state thành true 
                 state = True
                 #
-                # set new word
+                # Nạp từ mới. Hàm random thực hiện dựa trên propability, cũng có thể xem là trọng số khi random. 
                 current_word = np.random.choice(preds.shape[-1], 1, p=np.squeeze(preds))[0]
-                # add to list of words
+                # Thêm từ vào danh sách từ. 
                 words.append(current_word)
-        #########
-        # text generation complete
-        #
+
+        # Hoàn tất
         print('______Generated Text_______')
         print(''.join([idx2ch[w] for w in words]))
         print('___________________________')
