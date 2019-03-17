@@ -1,3 +1,6 @@
+import tensorflow as tf
+from tensorflow.contrib import rnn
+
 # weight and bias wrappers
 def weight_variable(shape):
     """

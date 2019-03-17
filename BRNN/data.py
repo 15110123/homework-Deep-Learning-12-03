@@ -1,11 +1,7 @@
 from tensorflow.examples.tutorials.mnist import input_data
+import numpy as np
 
 def load_data(mode='train'):
-    """
-    Function to (download and) load the MNIST data
-    :param mode: train or test
-    :return: images and the corresponding labels
-    """
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
     if mode == 'train':
         x_train, y_train, x_valid, y_valid = mnist.train.images, mnist.train.labels, \
