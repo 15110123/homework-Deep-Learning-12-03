@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 tf.logging.set_verbosity(tf.logging.ERROR)
 
 x_train, y_train, x_valid, y_valid = data.load_data(mode='train')
+print("Size of:")
+print("- Training-set:\t\t{}".format(len(y_train)))
+print("- Validation-set:\t{}".format(len(y_valid)))
 
 num_input = 28          # Kích thước input 
 timesteps = 28          # Số step 
