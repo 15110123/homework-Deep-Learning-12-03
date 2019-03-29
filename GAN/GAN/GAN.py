@@ -1,3 +1,5 @@
+# Tham khảo tại: https://blog.paperspace.com/implementing-gans-in-tensorflow/ 
+
 import tensorflow as tf
 import Generator as gen
 import Discriminator as disc
